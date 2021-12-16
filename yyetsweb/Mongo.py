@@ -1062,3 +1062,20 @@ class ResourceLatestMongoResource(ResourceLatestResource, Mongo):
         latest = self.query_db()
         redis.set("latest-resource", json.dumps(latest, ensure_ascii=False))
         logging.info("latest-resource data refreshed.")
+
+
+class SpamProcessMongoResource(Mongo):
+
+    def delete_spam(self, obj_id: "str"):
+        obj_id = ObjectId(obj_id)
+        logging.info("Deleting spam %s", obj_id)
+        self.db["spam"].delete_one({"_id": obj_id})
+        return {"status": True}
+
+    def restore_spam(self, obj_id: "str"):
+        obj_id = ObjectId(obj_id)
+        spam = self.db["spam"].find_one({"_id": obj_id}, projection={"_id": False})
+        logging.info("Restoring spam %s", spam)
+        self.db["comment"].insert_one(spam)
+        self.db["spam"].delete_one({"_id": obj_id})
+        return {"status": True}
