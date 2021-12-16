@@ -932,17 +932,11 @@ class SpamProcessHandler(BaseHandler):
         ua = self.request.headers['user-agent']
         ip = AntiCrawler(self).get_real_ip()
         logging.info("Authentication %s(%s) for spam API now...", ua, ip)
-        proxies = {
-            "http": "http://127.0.0.1:1087",
-            "https": "http://127.0.0.1:1087",
-        }
-        resp = requests.get(f"https://api.telegram.org/bot{token}/getMe", proxies=proxies).json()
-        username = resp.get("result", {}).get("username")
-        if username == "yyets_bot":
+        if token == os.getenv("TOKEN"):
             return getattr(self.instance, method)(obj_id)
         else:
             self.set_status(HTTPStatus.FORBIDDEN)
-            return {"status": False, "message": f"{username} is not allowed to access this API"}
+            return {"status": False, "message": "this token is not allowed to access this API"}
 
     @gen.coroutine
     def post(self):
